@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新西兰太阳能安装计算器</title>
+<style>
+  :root { --primary: #f39c12; --dark: #2c3e50; --success: #27ae60; --warn: #e74c3c; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f4f6f8; color: var(--dark); margin: 0; padding: 20px; line-height: 1.5; }
+  .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+  header { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 24px; text-align: center; }
+  header h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+  .content { padding: 24px; }
+  .section-title { font-weight: 700; margin: 20px 0 10px; color: #34495e; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
+  input, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+  input:focus, select:focus { outline: none; border-color: var(--primary); }
+  .hint { font-size: 0.78rem; color: #7f8c8d; margin-top: 3px; }
+  button { background: var(--primary); color: white; border: none; padding: 14px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 16px; }
+  button:hover { background: #e67e22; }
+  .results { margin-top: 24px; display: none; }
+  .results.show { display: block; }
+  .result-card { background: #f8f9fa; border-left: 4px solid var(--primary); padding: 14px; margin-bottom: 12px; border-radius: 6px; }
+  .result-card h3 { margin: 0 0 8px; }
+  .big { font-size: 1.5rem; font-weight: 700; color: var(--success); }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
+  th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #eee; }
+  th { background: #f1f1f1; text-align: left; }
+  .suitable { background: #e8f8f0; border-left-color: var(--success); }
+  .not-suitable { background: #fdecea; border-left-color: var(--warn); }
+  footer { text-align: center; padding: 16px; color: #7f8c8d; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>新西兰太阳能安装计算器</h1>
+    <p>填几个数字，看看装太阳能大概能省多少钱、多久回本</p>
+  </header>
+  <div class="content">
+    <div class="section-title">1. 你的电费情况</div>
+    <div class="grid">
+      <div>
+        <label>地区</label>
+        <select id="region">
+          <option value="1391">奥克兰</option>
+          <option value="1431">惠灵顿</option>
+          <option value="1340">基督城</option>
+          <option value="1226">但尼丁</option>
+          <option value="1137">因弗卡吉尔</option>
+          <option value="1290">汉密尔顿</option>
+          <option value="1388">陶朗加</option>
+          <option value="1350" selected>全国平均</option>
+        </select>
+        <div class="hint">选你所在的城市或最近的城市</div>
+      </div>
+      <div>
+        <label>每日固定费 ($/天)</label>
+        <input type="number" id="dailyCharge" value="1.60" step="0.01" min="0">
+        <div class="hint">电费单上的固定日费</div>
+      </div>
+      <div>
+        <label>用电单价 (分/度)</label>
+        <input type="number" id="usageRate" value="35" step="0.1" min="10">
+        <div class="hint">你买电的价格（含GST）</div>
+      </div>
+      <div>
+        <label>卖电单价 (分/度)</label>
+        <input type="number" id="exportRate" value="12" step="0.1" min="0">
+        <div class="hint">电网买回你多余电的价格</div>
+      </div>
+      <div>
+        <label>平均每天用电 (度)</label>
+        <input type="number" id="dailyUse" value="22" step="0.5" min="5">
+        <div class="hint">一年平均每天用多少度（全年总用电量 ÷ 365）。典型家庭 20–25 度/天</div>
+      </div>
+    </div>
+
+    <div class="section-title">2. 你考虑的系统</div>
+    <div class="grid">
+      <div>
+        <label>系统大小 (kW)</label>
+        <input type="number" id="size" value="6.6" step="0.1" min="1" max="20">
+        <div class="hint">常见 5–10 kW</div>
+      </div>
+      <div>
+        <label>电池容量 (kWh)</label>
+        <input type="number" id="batteryKwh" value="0" step="1" min="0" max="30">
+        <div class="hint">0 = 无电池。有电池能多用自己发的电</div>
+      </div>
+      <div>
+        <label>系统总价 ($)</label>
+        <input type="number" id="cost" value="15000" step="100">
+        <div class="hint">安装商报价总价（太阳能 + 电池）</div>
+      </div>
+    </div>
+
+    <button onclick="calculate()">计算能省多少钱</button>
+
+    <div id="results" class="results"></div>
+  </div>
+  <footer>
+    估算工具 · 仅供参考 · 实际效果受屋顶朝向、阴影、用电习惯影响
+  </footer>
+</div>
+
+<script>
+const monthlyFactors = [0.131,0.100,0.092,0.065,0.047,0.036,0.042,0.058,0.079,0.104,0.118,0.127];
+const daysInMonth = [31,28,31,30,31,30,31,31,30,31,30,31];
+const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const consumptionFactors = [0.90,0.85,0.88,0.95,1.05,1.20,1.25,1.15,1.00,0.92,0.88,0.90];
+
+function calculate() {
+  const regionYield = parseFloat(document.getElementById('region').value);
+  const size = parseFloat(document.getElementById('size').value) || 6.6;
+  const dailyCharge = parseFloat(document.getElementById('dailyCharge').value) || 0;
+  const usageRate = parseFloat(document.getElementById('usageRate').value) / 100;
+  const exportRate = parseFloat(document.getElementById('exportRate').value) / 100;
+  const dailyUse = parseFloat(document.getElementById('dailyUse').value) || 22;
+  const batteryKwh = parseFloat(document.getElementById('batteryKwh').value) || 0;
+  const hasBattery = batteryKwh > 0;
+  let totalCost = parseFloat(document.getElementById('cost').value);
+  if (!totalCost || totalCost < 1000) totalCost = Math.round(size * 2200 + (hasBattery ? batteryKwh * 1000 : 0));
+
+  const annualGen = size * regionYield;
+  const annualUse = dailyUse * 365;
+
+  // 自动估算：无电池大约能直接用掉 35%，有电池提高到约 65%
+  const baseSelfPct = hasBattery ? 0.65 : 0.35;
+
+  let totalSelf = 0, totalExport = 0, totalImport = 0;
+  let tableRows = '';
+
+  for (let i = 0; i < 12; i++) {
+    const mGen = annualGen * monthlyFactors[i];
+    const mUse = (annualUse / 12) * consumptionFactors[i];
+    const self = Math.min(mGen * baseSelfPct, mUse);
+    const exp = Math.max(0, mGen - self);
+    const imp = Math.max(0, mUse - self);
+    totalSelf += self;
+    totalExport += exp;
+    totalImport += imp;
+    tableRows += `<tr><td>${months[i]}</td><td>${Math.round(mGen)}</td><td>${Math.round(mUse)}</td><td>${Math.round(self)}</td><td>${Math.round(exp)}</td></tr>`;
+  }
+
+  const savingsSelf = totalSelf * usageRate;
+  const savingsExport = totalExport * exportRate;
+  const annualSavings = savingsSelf + savingsExport;
+  const payback = annualSavings > 0 ? totalCost / annualSavings : 999;
+
+  const annualDailyCharge = dailyCharge * 365;
+  const oldAnnualBill = annualDailyCharge + annualUse * usageRate;
+  const newAnnualBill = annualDailyCharge + totalImport * usageRate - savingsExport;
+
+  const suitable = payback <= 10 && annualSavings > 400;
+  const resultClass = suitable ? 'suitable' : 'not-suitable';
+  const verdict = suitable
+    ? `比较适合：大约 ${payback.toFixed(1)} 年回本`
+    : `回本较慢（约 ${payback.toFixed(1)} 年），建议再比较几家报价`;
+
+  // 常见系统参考
+  const commons = [
+    {name:'5 kW 无电池', size:5, batt:false, cost:11500},
+    {name:'6.6 kW 无电池', size:6.6, batt:false, cost:14000},
+    {name:'10 kW 无电池', size:10, batt:false, cost:19500},
+    {name:'6.6 kW + 约10kWh电池', size:6.6, batt:true, cost:24000},
+    {name:'10 kW + 约13kWh电池', size:10, batt:true, cost:31000}
+  ];
+  let compRows = '';
+  commons.forEach(s => {
+    const gen = s.size * regionYield;
+    const pct = s.batt ? 0.65 : 0.35;
+    const self = Math.min(gen * pct, annualUse);
+    const exp = Math.max(0, gen - self);
+    const sav = self * usageRate + exp * exportRate;
+    const pb = sav > 0 ? (s.cost / sav).toFixed(1) : '-';
+    compRows += `<tr><td>${s.name}</td><td>$${s.cost.toLocaleString()}</td><td>$${Math.round(sav)}</td><td>${pb} 年</td></tr>`;
+  });
+
+  // 把用户自己的方案加到最下面
+  const userPct = hasBattery ? 0.65 : 0.35;
+  const userGen = size * regionYield;
+  const userSelf = Math.min(userGen * userPct, annualUse);
+  const userExp = Math.max(0, userGen - userSelf);
+  const userSav = userSelf * usageRate + userExp * exportRate;
+  const userPb = userSav > 0 ? (totalCost / userSav).toFixed(1) : '-';
+  const userName = `${size} kW` + (hasBattery ? ` + ${batteryKwh}kWh电池` : ' 无电池');
+  compRows += `<tr style="background:#fff8e1; font-weight:600;"><td>${userName}（你的方案）</td><td>$${totalCost.toLocaleString()}</td><td>$${Math.round(userSav)}</td><td>${userPb} 年</td></tr>`;
+
+  const html = `
+    <div class="result-card ${resultClass}">
+      <h3>你的方案</h3>
+      <div class="big">${verdict}</div>
+      <p>一年大概能省 <strong>$${Math.round(annualSavings)}</strong> · 系统总价 $${totalCost.toLocaleString()}</p>
+      <p>原年电费约 $${Math.round(oldAnnualBill)} → 装后约 $${Math.round(newAnnualBill)}</p>
+      <p style="font-size:0.9rem;color:#555;">${hasBattery ? `已按有 ${batteryKwh} kWh 电池估算（能多用自己发的电）` : '已按无电池估算'}</p>
+    </div>
+    <div class="result-card">
+      <h3>常见系统参考（按你的电价估算）</h3>
+      <table>
+        <tr><th>系统</th><th>参考总价</th><th>年节省</th><th>回本</th></tr>
+        ${compRows}
+      </table>
+      <p class="hint" style="color:#e67e22; font-weight:600;">⚠️ 以上参考总价仅为市场大致估算，仅供初步了解。具体产品型号、屋顶朝向、遮挡情况、配电箱改造、施工难度等都会让实际报价相差很多，最终以安装商书面报价为准。</p>
+    </div>
+    <div class="result-card">
+      <h3>每月大致情况</h3>
+      <table>
+        <tr><th>月份</th><th>发电</th><th>用电</th><th>自己用</th><th>卖电</th></tr>
+        ${tableRows}
+      </table>
+      <p class="hint">冬季发电少、用电多（供暖），这是正常现象。</p>
+    </div>
+  `;
+
+  const el = document.getElementById('results');
+  el.innerHTML = html;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
